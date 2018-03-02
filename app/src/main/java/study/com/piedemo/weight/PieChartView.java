@@ -112,7 +112,7 @@ public class PieChartView extends View {
             lineEndX = (float) ((radius + 30) * Math.cos(Math.toRadians(lineAngle)));
             lineEndY = (float) ((radius + 30) * Math.sin(Math.toRadians(lineAngle)));
             str = String.format("%.1f", dataBean.getValue() / totalValue * 100) + "%";
-            if (startAngle >= 90 && startAngle <= 270) {
+            if ( lineAngle >= 90 &&  lineAngle <= 270) {
                 linePaint.setTextAlign(Paint.Align.RIGHT);
             } else {
                 linePaint.setTextAlign(Paint.Align.LEFT);
