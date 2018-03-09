@@ -8,8 +8,11 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
+import java.util.Arrays;
 import java.util.List;
 
 import study.com.piedemo.DataBean;
@@ -29,6 +32,11 @@ public class PieChartView extends View {
     private Path path;
     private RectF rectf;
     private float radius;
+    //角度范围的数组
+    private float[] angleArrays;
+    //当前点击的位置
+    private int clickPosition = -1;
+    private RectF clickRectF;
 
     public PieChartView(Context context) {
         this(context, null);
@@ -66,6 +74,7 @@ public class PieChartView extends View {
     public void setData(List<DataBean> list) {
         this.list = list;
         calculate();
+        angleArrays = new float[list.size()];
     }
 
     /**
@@ -84,6 +93,8 @@ public class PieChartView extends View {
         halfHeight = h * 1.0f / 2;
         radius = Math.min(halfWidth, halfHeight) * 0.6f;
         rectf = new RectF(-radius, -radius, radius, radius);
+
+        clickRectF = new RectF(-radius - 15, -radius - 15, radius + 15, radius + 15);
     }
 
     @Override
@@ -103,7 +114,11 @@ public class PieChartView extends View {
             DataBean dataBean = list.get(i);
             path.moveTo(0, 0); //起始点移动至圆点
             sweepAngle = dataBean.getValue() * 360 / totalValue - 1;
-            path.arcTo(rectf, startAngle, sweepAngle);
+            if (i == clickPosition) {
+                path.arcTo(clickRectF, startAngle, sweepAngle);
+            } else {
+                path.arcTo(rectf, startAngle, sweepAngle);
+            }
             piePaint.setColor(Color.parseColor(dataBean.getColor()));
             canvas.drawPath(path, piePaint);
             lineAngle = startAngle + sweepAngle / 2;
@@ -112,16 +127,53 @@ public class PieChartView extends View {
             lineEndX = (float) ((radius + 30) * Math.cos(Math.toRadians(lineAngle)));
             lineEndY = (float) ((radius + 30) * Math.sin(Math.toRadians(lineAngle)));
             str = String.format("%.1f", dataBean.getValue() / totalValue * 100) + "%";
-            if ( lineAngle >= 90 &&  lineAngle <= 270) {
+            if (lineAngle >= 90 && lineAngle <= 270) {
                 linePaint.setTextAlign(Paint.Align.RIGHT);
             } else {
                 linePaint.setTextAlign(Paint.Align.LEFT);
             }
             canvas.drawLine(lineStartX, lineStartY, lineEndX, lineEndY, linePaint);
             canvas.drawText(str, lineEndX, lineEndY, linePaint);
+
+            angleArrays[i] = startAngle % 360;  //取余数
             startAngle += sweepAngle + 1;
             path.reset(); //重置path，清空path的配置
         }
         canvas.restore();
+    }
+
+    private float x;
+    private float y;
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                x = event.getX(); //获取相对于控件自身的x坐标
+                y = event.getY(); //获取相对于控制自身的y坐标
+                x = x - halfWidth; //转换坐标
+                y = y - halfHeight;
+                Log.e("position::", y + "=0=" + x);
+                float transformAngle = transformAngle(x, y); //转化的角度
+                //二分查找,如果寻找不到则选择查询值最近的较大值下标,并取其值加1之后取结果负值返回
+                int searchIndex = Arrays.binarySearch(angleArrays, transformAngle);
+                Log.e("position::", transformAngle + "=1="+searchIndex);
+                clickPosition = searchIndex >= 0 ? searchIndex : (-searchIndex - 2);
+                Log.e("position::", clickPosition + "=2=");
+                invalidate(); //重绘
+                break;
+            case MotionEvent.ACTION_MOVE:
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        return super.onTouchEvent(event);
+    }
+
+    //转化角度
+    public float transformAngle(float x, float y) {
+        float transAngle = (float) Math.toDegrees(Math.atan2(y, x));  //计算得出的值的范围为[-180,180];
+        return transAngle >= 0 ? transAngle : transAngle + 360;
     }
 }
