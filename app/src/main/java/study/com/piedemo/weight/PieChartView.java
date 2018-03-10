@@ -154,14 +154,17 @@ public class PieChartView extends View {
                 y = event.getY(); //获取相对于控制自身的y坐标
                 x = x - halfWidth; //转换坐标
                 y = y - halfHeight;
-                Log.e("position::", y + "=0=" + x);
-                float transformAngle = transformAngle(x, y); //转化的角度
-                //二分查找,如果寻找不到则选择查询值最近的较大值下标,并取其值加1之后取结果负值返回
-                int searchIndex = Arrays.binarySearch(angleArrays, transformAngle);
-                Log.e("position::", transformAngle + "=1="+searchIndex);
-                clickPosition = searchIndex >= 0 ? searchIndex : (-searchIndex - 2);
-                Log.e("position::", clickPosition + "=2=");
-                invalidate(); //重绘
+                double sqrt = Math.sqrt(x * x + y * y);
+                if (sqrt <= radius) {  //必须点击在圆饼状之内
+                    Log.e("position::", y + "=0=" + x);
+                    float transformAngle = transformAngle(x, y); //转化的角度
+                    //二分查找,如果寻找不到则选择查询值最近的较大值下标,并取其值加1之后取结果负值返回
+                    int searchIndex = Arrays.binarySearch(angleArrays, transformAngle);
+                    Log.e("position::", transformAngle + "=1=" + searchIndex);
+                    clickPosition = searchIndex >= 0 ? searchIndex : (-searchIndex - 2);
+                    Log.e("position::", clickPosition + "=2=");
+                    invalidate(); //重绘
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 break;
