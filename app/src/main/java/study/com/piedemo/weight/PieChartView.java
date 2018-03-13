@@ -176,7 +176,7 @@ public class PieChartView extends View {
 
     //转化角度
     public float transformAngle(float x, float y) {
-        float transAngle = (float) Math.toDegrees(Math.atan2(y, x));  //计算得出的值的范围为[-180,180];
+        float transAngle = (float) Math.toDegrees(Math.atan2(y, x));  //计算得出的值的范围为[-π/2,π/2];
         return transAngle >= 0 ? transAngle : transAngle + 360;
     }
 }
